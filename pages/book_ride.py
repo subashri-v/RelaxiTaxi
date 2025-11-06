@@ -4,17 +4,42 @@ from geopy.distance import geodesic
 import folium
 from streamlit_folium import st_folium
 import random
-import webbrowser
+from shared_state import get_app_state 
+import os
+import sys
 
-st.set_page_config(page_title="RelaxiTaxi", layout="centered")
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-st.title("🚕 RelaxiTaxi")
+# Get the shared state dictionary
+state = get_app_state()
 
-# --- Session state ---
-if "distance_data" not in st.session_state:
-    st.session_state.distance_data = None
-if "booking" not in st.session_state:
-    st.session_state.booking = None
+# --- CSS to hide the sidebar ---
+st.markdown(
+    """
+<style>
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+# --- Security Check ---
+if st.session_state.get("role") != "customer":
+    st.error("You must be logged in as a customer to access this page.")
+    if st.button("Go to Login"):
+        st.switch_page("app.py")
+    st.stop()
+
+# --- Header with Sign Out ---
+col1, col2 = st.columns([0.8, 0.2])
+with col1:
+    st.title("🚕 RelaxiTaxi")
+with col2:
+    if st.button("Sign Out"):
+        st.session_state.role = None
+        st.switch_page("app.py")
 
 # --- Inputs ---
 start = st.text_input("Enter Start Location:", "PES University, Bangalore")
@@ -31,20 +56,25 @@ if st.button("Search Rides"):
         end_coords = (end_location.latitude, end_location.longitude)
         distance_km = geodesic(start_coords, end_coords).kilometers
 
-        st.session_state.distance_data = {
+        # --- MODIFIED ---
+        # Save to global state instead of session state
+        state["distance_data"] = {
             "start": start,
             "end": end,
             "start_coords": start_coords,
             "end_coords": end_coords,
             "distance_km": distance_km
         }
-        st.session_state.booking = None  # reset previous booking
+        state["booking"] = None  # reset previous booking
+        # --- END MODIFIED ---
     else:
         st.error("❌ Could not locate one or both addresses. Please try again.")
 
 # --- Display result ---
-if st.session_state.distance_data:
-    data = st.session_state.distance_data
+# --- MODIFIED ---
+if state["distance_data"]:
+    data = state["distance_data"]
+    # --- END MODIFIED ---
     distance = data['distance_km']
 
     st.success(f"📏 Distance between {data['start']} and {data['end']}: {distance:.2f} km")
@@ -76,14 +106,16 @@ if st.session_state.distance_data:
         if st.button("Book Non-AC"):
             driver = random.choice(["Ravi Kumar", "Amit Sharma", "Karan Singh", "Rahul Das", "Deepak Mehta"])
             eta = random.randint(3, 10)
-            st.session_state.booking = {
+            # --- MODIFIED ---
+            state["booking"] = {
                 "type": "Non-AC Ride",
                 "fare": total_non_ac,
-                "driver": driver,
+                "driver": driver, 
                 "eta": eta,
-                "from": data['start'],
-                "to": data['end']
+                "status": "pending" 
             }
+            state["ride_progress"] = 0.0 
+            # --- END MODIFIED ---
 
     # --- Cab AC ---
     with col2:
@@ -93,26 +125,35 @@ if st.session_state.distance_data:
         if st.button("Book AC"):
             driver = random.choice(["Vikas Rao", "Arjun Patil", "Manoj Kumar", "Suresh Reddy", "Abhinav Singh"])
             eta = random.randint(3, 10)
-            st.session_state.booking = {
+            # --- MODIFIED ---
+            state["booking"] = {
                 "type": "AC Ride",
                 "fare": total_ac,
                 "driver": driver,
                 "eta": eta,
-                "from": data['start'],
-                "to": data['end']
+                "status": "pending" 
             }
+            state["ride_progress"] = 0.0 
+            # --- END MODIFIED ---
 
 # --- Booking Confirmation ---
-if st.session_state.booking:
-    booking = st.session_state.booking
+# --- MODIFIED ---
+if state["booking"]:
+    booking = state["booking"]
+    # --- END MODIFIED ---
     st.markdown("---")
-    st.success(
-        f"✅ {booking['type']} booked successfully!\n\n"
-        f"👨‍✈️ Driver: **{booking['driver']}**\n\n"
-        f"⏱ ETA: **{booking['eta']} mins**\n\n"
-        f"💰 Fare: **₹{booking['fare']:.2f}**"
-    )
-
-    # ✅ Show Track button only after booking
-    if st.button("📍 Track Your Ride"):
-        st.switch_page("pages/track_ride.py")
+    
+    if booking['status'] == 'pending':
+        st.info("⏳ Waiting for a driver to accept your ride...")
+        st.rerun() # Auto-refresh to check if driver accepted
+    
+    elif booking['status'] == 'accepted':
+        st.success(
+            f"✅ {booking['type']} booked successfully!\n\n"
+            f"👨‍✈️ Driver: **{booking['driver']}**\n\n"
+            f"⏱ ETA: **{booking['eta']} mins**\n\n"
+            f"💰 Fare: **₹{booking['fare']:.2f}**"
+        )
+        # ✅ Show Track button only after booking is accepted
+        if st.button("📍 Track Your Ride"):
+            st.switch_page("pages/track_ride.py")
