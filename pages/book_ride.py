@@ -100,7 +100,7 @@ if state["distance_data"]:
 
     # --- Cab Non-AC ---
     with col1:
-        st.image("https://icon-library.com/images/cab-icon/cab-icon-4.jpg", width=120)
+        st.image("https://icon-library.com/images/cab-icon/cab-icon-16.jpg", width=120)
         st.markdown("**Non-AC Ride**")
         st.markdown(f"💰 Estimated Fare: **₹{total_non_ac:.2f}**")
         if st.button("Book Non-AC"):
@@ -119,7 +119,7 @@ if state["distance_data"]:
 
     # --- Cab AC ---
     with col2:
-        st.image("https://icon-library.com/images/cab-icon/cab-icon-4.jpg", width=120)
+        st.image("https://images.vexels.com/media/users/3/128868/isolated/preview/b8dd4eaa0e285fcf4248b50916b0cef9-taxi-cab-icon-silhouette.png", width=120)
         st.markdown("**AC Ride**")
         st.markdown(f"💰 Estimated Fare: **₹{total_ac:.2f}**")
         if st.button("Book AC"):
