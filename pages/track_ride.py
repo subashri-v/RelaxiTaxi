@@ -84,7 +84,7 @@ with col2:
         st.session_state.ride_progress = 0.0
         st.warning("❌ Ride cancelled successfully!")
         st.stop()
-
+        
 # --- Simulated driver position ---
 curr_lat = start[0] + progress * (end[0] - start[0])
 curr_lon = start[1] + progress * (end[1] - start[1])
