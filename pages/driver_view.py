@@ -105,16 +105,30 @@ elif booking['status'] == 'accepted':
                 st.rerun()
 
     with col3:
-        if progress == 0.0: # Can only cancel before starting
+        if progress == 0.0:
             if st.button("🚫 Cancel Ride"):
-                # --- MODIFIED ---
-                state["booking"] = None
-                state["ride_progress"] = 0.0
-                state["distance_data"] = None
-                # --- END MODIFIED ---
-                st.warning("Ride Cancelled")
-                time.sleep(2)
+                # Store a flag in session state to show the cancel message temporarily
+                st.session_state["cancelled"] = True
+                st.session_state["cancel_time"] = time.time()
                 st.rerun()
+
+    # --- Separate handling for cancellation message ---
+    if st.session_state.get("cancelled"):
+        st.warning("❌ Ride cancelled successfully!")
+        if time.time() - st.session_state["cancel_time"] > 5:
+            # After 5 seconds, clear booking + reset state
+            state.update({
+                "booking": None,
+                "ride_progress": 0.0,
+                "distance_data": None
+            })
+            st.session_state.pop("cancelled")
+            st.session_state.pop("cancel_time")
+            st.rerun()
+        st.stop()  # Prevents rest of UI from showing
+
+
+    
 
     # --- Progress Bar ---
     if progress == 0.0:
