@@ -47,7 +47,7 @@ end = st.text_input("Enter End Location:", "MG Road, Bangalore")
 
 # --- Button ---
 if st.button("Search Rides"):
-    geolocator = Nominatim(user_agent="cab_aggregator")
+    geolocator = Nominatim(user_agent="cab_aggregator", timeout=10)
     start_location = geolocator.geocode(start)
     end_location = geolocator.geocode(end)
 

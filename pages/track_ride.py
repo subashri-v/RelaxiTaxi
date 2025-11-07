@@ -78,7 +78,7 @@ with st.expander("✏️ Change Destination"):
     new_start = st.text_input("Change Start Location:", data["start"])
     new_end = st.text_input("Change Destination:", data["end"])
     if st.button("Update Locations"):
-        geolocator = Nominatim(user_agent="relaxitaxi_tracker")
+        geolocator = Nominatim(user_agent="relaxitaxi_tracker", timeout=10)
         new_start_loc = geolocator.geocode(new_start)
         new_end_loc = geolocator.geocode(new_end)
 
