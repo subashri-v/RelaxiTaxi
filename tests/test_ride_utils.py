@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pytest
-from ride_utils import calculate_distance, calculate_fare
+from ride_utils import calculate_distance, calculate_fare, get_coordinates
 
 def test_calculate_fare_non_ac():
     assert calculate_fare(10, ac=False) == 40 + 15 * 10
@@ -48,4 +48,33 @@ def test_calculate_distance_exception_handling(monkeypatch):
     # Now call it — should handle the exception and return None
     result = calculate_distance((12.9, 77.5), (13.0, 80.2))
     assert result is None
+
+class MockLocation:
+    def __init__(self, lat, lon):
+        self.latitude = lat
+        self.longitude = lon
+
+def test_get_coordinates_success(monkeypatch):
+    """Test get_coordinates returns correct tuple when location is found."""
+    mock_location = MockLocation(12.9716, 77.5946)
+
+    class MockGeolocator:
+        def geocode(self, name):
+            return mock_location
+
+    monkeypatch.setattr("ride_utils.Nominatim", lambda **kwargs: MockGeolocator())
+
+    coords = get_coordinates("Bangalore")
+    assert coords == (12.9716, 77.5946)
+
+def test_get_coordinates_failure(monkeypatch):
+    """Test get_coordinates returns None when location is not found."""
+    class MockGeolocator:
+        def geocode(self, name):
+            return None
+
+    monkeypatch.setattr("ride_utils.Nominatim", lambda **kwargs: MockGeolocator())
+
+    coords = get_coordinates("UnknownPlace")
+    assert coords is None
 
