@@ -68,7 +68,6 @@ if booking['status'] == 'pending':
     if st.button("✅ Accept Ride"):
         # --- MODIFIED ---
         state["booking"]['status'] = 'accepted'
-        state["booking"]['driver'] = "You (Driver)" # Assign driver
         # --- END MODIFIED ---
         st.rerun()
 

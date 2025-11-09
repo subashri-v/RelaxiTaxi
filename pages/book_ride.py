@@ -38,6 +38,12 @@ with col2:
 start = st.text_input("Enter Start Location:", "PES University, Bangalore")
 end = st.text_input("Enter End Location:", "MG Road, Bangalore")
 
+# Sample car numbers
+car_numbers = [
+    "KA01AB1234", "KA03CD5678", "KA05EF4321",
+    "KA09GH8765", "KA02JK9988", "KA07LM4455"
+]
+
 # Search button
 if st.button("Search Rides"):
     try:
@@ -60,11 +66,17 @@ if st.button("Search Rides"):
 if state["distance_data"]:
     data = state["distance_data"]
     distance = data["distance_km"]
-    st.success(f"📏 Distance between {data['start']} and {data['end']}: {distance:.2f} km")
+    st.success(
+        f"📏 Distance between {data['start']} and {data['end']}: {distance:.2f} km"
+    )
 
     m = folium.Map(location=data["start_coords"], zoom_start=13)
-    folium.Marker(data["start_coords"], tooltip="Start", icon=folium.Icon(color='green')).add_to(m)
-    folium.Marker(data["end_coords"], tooltip="End", icon=folium.Icon(color='red')).add_to(m)
+    folium.Marker(
+        data["start_coords"], tooltip="Start", icon=folium.Icon(color='green')
+    ).add_to(m)
+    folium.Marker(
+        data["end_coords"], tooltip="End", icon=folium.Icon(color='red')
+    ).add_to(m)
     st_folium(m, width=700, height=500)
 
     # Fare
@@ -74,26 +86,53 @@ if state["distance_data"]:
     st.markdown("### 🚗 Available Cabs")
     col1, col2 = st.columns(2)
 
+    # Non-AC Ride
     with col1:
         st.image("https://icon-library.com/images/cab-icon/cab-icon-16.jpg", width=120)
         st.markdown("**Non-AC Ride**")
         st.markdown(f"💰 Estimated Fare: **₹{total_non_ac:.2f}**")
         if st.button("Book Non-AC"):
-            driver = random.choice(["Ravi Kumar", "Amit Sharma", "Karan Singh", "Rahul Das", "Deepak Mehta"])
+            driver = random.choice(
+                ["Ravi Kumar", "Amit Sharma", "Karan Singh", "Rahul Das", "Deepak Mehta"]
+            )
+            car_no = random.choice(car_numbers)
             eta = random.randint(3, 10)
-            state["booking"] = {"type": "Non-AC Ride", "fare": total_non_ac, "driver": driver, "eta": eta, "status": "pending"}
+            state["booking"] = {
+                "type": "Non-AC Ride",
+                "fare": total_non_ac,
+                "driver": driver,
+                "car_number": car_no,
+                "eta": eta,
+                "status": "pending"
+            }
             state["ride_progress"] = 0.0
 
+    # AC Ride
     with col2:
-        st.image("https://images.vexels.com/media/users/3/128868/isolated/preview/b8dd4eaa0e285fcf4248b50916b0cef9-taxi-cab-icon-silhouette.png", width=120)
+        st.image(
+            "https://images.vexels.com/media/users/3/128868/isolated/preview/"
+            "b8dd4eaa0e285fcf4248b50916b0cef9-taxi-cab-icon-silhouette.png",
+            width=120
+        )
         st.markdown("**AC Ride**")
         st.markdown(f"💰 Estimated Fare: **₹{total_ac:.2f}**")
         if st.button("Book AC"):
-            driver = random.choice(["Vikas Rao", "Arjun Patil", "Manoj Kumar", "Suresh Reddy", "Abhinav Singh"])
+            driver = random.choice(
+                ["Vikas Rao", "Arjun Patil", "Manoj Kumar", "Suresh Reddy", "Abhinav Singh"]
+            )
+            car_no = random.choice(car_numbers)
             eta = random.randint(3, 10)
-            state["booking"] = {"type": "AC Ride", "fare": total_ac, "driver": driver, "eta": eta, "status": "pending"}
+            state["booking"] = {
+                "type": "AC Ride",
+                "fare": total_ac,
+                "driver": driver,
+                "car_number": car_no,
+                "eta": eta,
+                "status": "pending"
+            }
             state["ride_progress"] = 0.0
 
+# Booking Confirmation
 if state["booking"]:
     booking = state["booking"]
     st.markdown("---")
@@ -101,6 +140,12 @@ if state["booking"]:
         st.info("⏳ Waiting for a driver to accept your ride...")
         st.rerun()
     elif booking['status'] == 'accepted':
-        st.success(f"✅ {booking['type']} booked!\n\n👨‍✈️ Driver: **{booking['driver']}**\n⏱ ETA: **{booking['eta']} mins**\n💰 Fare: **₹{booking['fare']:.2f}**")
+        st.success(
+            f"✅ {booking['type']} booked!\n\n"
+            f"👨‍✈️ Driver: **{booking['driver']}**\n\n"
+            f"🚘 Car Number: **{booking['car_number']}**\n\n"
+            f"⏱ ETA: **{booking['eta']} mins**\n\n"
+            f"💰 Fare: **₹{booking['fare']:.2f}**"
+        )
         if st.button("📍 Track Your Ride"):
             st.switch_page("pages/track_ride.py")
